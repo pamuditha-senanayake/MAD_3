@@ -1,79 +1,100 @@
 package com.example.task
 
 import android.app.AlertDialog
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.widget.LinearLayout
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import android.widget.TextView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var containerLayout: LinearLayout  // Use LinearLayout instead of ConstraintLayout
+    private lateinit var containerLayout: LinearLayout
+    private lateinit var sharedPreferences: SharedPreferences
+    private val timeList = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Initialize the LinearLayout where items will be added
         containerLayout = findViewById(R.id.linearLayout)
+        sharedPreferences = getSharedPreferences("TimePrefs", Context.MODE_PRIVATE)
 
-        // Initialize the FloatingActionButton
+        loadSavedTimes()
+
         val fab: FloatingActionButton = findViewById(R.id.fab)
-
-        // Set the click listener for the FAB
         fab.setOnClickListener {
             showInputDialog()
         }
     }
 
-    // Function to display the dialog input
     private fun showInputDialog() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Enter Time")
 
-        // Inflate the custom input dialog
         val inflater: LayoutInflater = layoutInflater
         val dialogView: View = inflater.inflate(R.layout.dialog_input, null)
         builder.setView(dialogView)
 
         val inputField: EditText = dialogView.findViewById(R.id.editTextTime)
 
-        // Set up the "Add" button in the dialog
         builder.setPositiveButton("Add") { _, _ ->
             val timeInput = inputField.text.toString()
             if (timeInput.isNotEmpty()) {
                 addTimeToLayout(timeInput)
+                saveTimeToSharedPreferences(timeInput)
             }
         }
 
-        // Set up the "Cancel" button in the dialog
-        builder.setNegativeButton("Cancel") { dialog, _ ->
-            dialog.cancel()
-        }
-
+        builder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
         builder.show()
     }
 
-    // Function to dynamically add a new item to the layout
     private fun addTimeToLayout(time: String) {
-        // Inflate the new time view (from time_item.xml layout)
         val newTimeView = LayoutInflater.from(this).inflate(R.layout.time_item, null) as ConstraintLayout
-
-        // Set the time in the TextView inside the new view
         val timeTextView = newTimeView.findViewById<TextView>(R.id.textViewTime)
         timeTextView.text = time
 
-        // Define layout parameters for the new view
-        val layoutParams = LinearLayout.LayoutParams(250, 100) // Set width to 250dp, height to 100dp
-        layoutParams.setMargins(16, 0, 0, 0)  // Add left margin for spacing
-        layoutParams.gravity = android.view.Gravity.CENTER_VERTICAL  // Center vertically
+        val deleteButton = newTimeView.findViewById<Button>(R.id.button)
+        deleteButton.setOnClickListener {
+            containerLayout.removeView(newTimeView)
+            removeTimeFromSharedPreferences(time)
+        }
 
-        // Add the new time view to the container layout (LinearLayout)
+        val layoutParams = LinearLayout.LayoutParams(300, 120)
+        layoutParams.setMargins(16, 0, 0, 0)
+        layoutParams.gravity = android.view.Gravity.CENTER_VERTICAL
+
         containerLayout.addView(newTimeView, layoutParams)
+    }
+
+    private fun saveTimeToSharedPreferences(time: String) {
+        timeList.add(time)
+        with(sharedPreferences.edit()) {
+            putStringSet("saved_times", timeList.toSet())
+            apply()
+        }
+    }
+
+    private fun loadSavedTimes() {
+        val savedTimes = sharedPreferences.getStringSet("saved_times", emptySet())
+        savedTimes?.forEach { time ->
+            addTimeToLayout(time)
+        }
+    }
+
+    private fun removeTimeFromSharedPreferences(time: String) {
+        timeList.remove(time)
+        with(sharedPreferences.edit()) {
+            putStringSet("saved_times", timeList.toSet())
+            apply()
+        }
     }
 }
