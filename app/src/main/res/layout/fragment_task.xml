@@ -2,61 +2,14 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#FAFAFA"
-    tools:context=".MainActivity">
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="415dp"
-        android:layout_height="87dp"
-        app:cardBackgroundColor="#5B48EB"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.17">
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <HorizontalScrollView
-                android:id="@+id/horizontalScrollView"
-                android:layout_width="285dp"
-                android:layout_height="84dp"
-                android:fillViewport="true">
-
-                <!-- Change to LinearLayout with horizontal orientation -->
-                <LinearLayout
-                    android:id="@+id/linearLayout"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal"/>
-            </HorizontalScrollView>
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/fab"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentEnd="true"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="15dp"
-                android:backgroundTint="@color/white"
-                android:src="@drawable/add"
-                android:tint="@color/black" />
-
-        </RelativeLayout>
-    </androidx.cardview.widget.CardView>
+    android:layout_height="match_parent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/card2"
         android:layout_width="402dp"
         android:layout_height="429dp"
-        android:background="#5B48EB"
-        tools:layout_editor_absoluteX="4dp"
-        tools:layout_editor_absoluteY="234dp">
+        android:background="#5B48EB">
 
         <RelativeLayout
             android:id="@+id/relativeLayout"
@@ -74,9 +27,9 @@
 
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:id="@+id/relativeLayout2"
-                        android:layout_width="363dp"
-                        android:layout_height="73dp"
-                        android:layout_marginTop="92dp"
+                        android:layout_width="365dp"
+                        android:layout_height="80dp"
+                        android:layout_marginTop="104dp"
                         android:background="#F8F8F8"
                         app:layout_constraintTop_toTopOf="parent"
                         tools:layout_editor_absoluteX="23dp">
@@ -85,23 +38,25 @@
                             android:id="@+id/textView2"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="40dp"
+                            android:layout_marginStart="36dp"
                             android:text="Task 1"
                             android:textSize="20sp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintVertical_bias="0.509" />
 
                         <TextView
                             android:id="@+id/textView3"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="96dp"
+                            android:layout_marginStart="112dp"
                             android:text="10:00"
                             android:textSize="20sp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toEndOf="@+id/textView2"
-                            app:layout_constraintTop_toTopOf="parent" />
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintVertical_bias="0.509" />
 
                         <Button
                             android:id="@+id/button2"
@@ -109,19 +64,23 @@
                             android:layout_height="53dp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintHorizontal_bias="0.559"
                             app:layout_constraintStart_toEndOf="@+id/textView3"
-                            app:layout_constraintTop_toTopOf="parent" />
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintVertical_bias="0.518" />
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                     <TextView
                         android:id="@+id/textView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
                         android:text="Task List"
                         android:textColor="#FFFFFF"
                         android:textSize="32sp"
-                        tools:layout_editor_absoluteX="141dp"
-                        tools:layout_editor_absoluteY="25dp" />
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </ScrollView>
         </RelativeLayout>
@@ -138,5 +97,4 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/relativeLayout" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>
