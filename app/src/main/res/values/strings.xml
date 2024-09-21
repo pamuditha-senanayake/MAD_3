@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Task</string>
+    <string name="hint1">Enter time (e.g., 10:00 AM)</string>
+</resources>
