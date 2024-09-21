@@ -1,10 +1,16 @@
 package com.example.task
 
 import android.app.AlertDialog
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Vibrator
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
@@ -13,6 +19,8 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.concurrent.TimeUnit
 
@@ -24,6 +32,9 @@ class MainActivity : AppCompatActivity() {
     private var taskCounter = 0 // For unique task ID
     private val taskList = mutableMapOf<String, MutableList<Triple<String, String, String>>>() // Tasks organized by time frame (name, duration, description)
     private var selectedTimeFrame: String? = null // Store the selected time frame
+    private lateinit var vibrator: Vibrator
+    private lateinit var notificationManager: NotificationManagerCompat
+    private val CHANNEL_ID = "task_channel" // ID for the notification channel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +42,31 @@ class MainActivity : AppCompatActivity() {
 
         containerLayout = findViewById(R.id.linearLayout)
         sharedPreferences = getSharedPreferences("TimePrefs", Context.MODE_PRIVATE)
+        vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        notificationManager = NotificationManagerCompat.from(this)
+
+        // Request Vibration Permission (for Android 6.0 and above)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(android.Manifest.permission.VIBRATE) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(android.Manifest.permission.VIBRATE), PERMISSION_REQUEST_VIBRATE)
+            }
+        }
+
+        // Create Notification Channel (for Android 8.0 and above)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Task Completion Channel",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Channel for task completion notifications"
+                enableLights(true)
+                lightColor = Color.GREEN
+                enableVibration(true)
+            }
+            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
 
         loadSavedTimes()
         loadSavedTasks() // Load tasks from SharedPreferences
@@ -229,7 +265,7 @@ class MainActivity : AppCompatActivity() {
         playButton.setOnClickListener {
             val durationText = taskLayout.findViewById<TextView>(R.id.textViewDuration).text.toString()
             val durationInMillis = convertDurationToMillis(durationText)
-            startCountDownTimer(durationInMillis, taskLayout)
+            startCountDownTimer(durationInMillis, taskLayout, taskName)
         }
 
         // Add a click listener to the task layout to allow for updating tasks
@@ -291,28 +327,43 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     private fun convertDurationToMillis(duration: String): Long {
         val parts = duration.split(":").map { it.toIntOrNull() ?: 0 }
-        return (parts[0] * 60 * 1000 + parts[1] * 1000).toLong() // Convert to milliseconds
+        return when (parts.size) {
+            2 -> (parts[0] * 60 * 1000 + parts[1] * 1000).toLong()  // If duration is "mm:ss"
+            1 -> (parts[0] * 60 * 1000).toLong() // If duration is "mm" (only minutes)
+            else -> 0L // Handle other cases (invalid format)
+        }
     }
 
-    private fun startCountDownTimer(durationInMillis: Long, taskLayout: ConstraintLayout) {
-        val durationTextView = taskLayout.findViewById<TextView>(R.id.textViewDuration) // Use textViewDuration here
+    private fun startCountDownTimer(durationInMillis: Long, taskLayout: ConstraintLayout, taskName: String) {
+        val durationTextView = taskLayout.findViewById<TextView>(R.id.textViewDuration)
         object : CountDownTimer(durationInMillis, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished)
                 val seconds = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) % 60
-                durationTextView.text = String.format("%02d:%02d", minutes, seconds) // Update textViewDuration
+                durationTextView.text = String.format("%02d:%02d", minutes, seconds)
             }
 
             override fun onFinish() {
                 durationTextView.text = "Finished!"
+                // Vibrate the device
+                if (vibrator.hasVibrator()) {
+                    vibrator.vibrate(500)
+                }
+
+                // Show a notification
+                val builder = NotificationCompat.Builder(this@MainActivity, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.ic_launcher_background)
+                    .setContentTitle("Task Finished!")
+                    .setContentText("$taskName is finished")
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setAutoCancel(true)
+
+                notificationManager.notify(1, builder.build())
             }
         }.start()
     }
-
-
 
     private fun updateTaskListDisplay() {
         // Clear the existing task list display
@@ -344,7 +395,7 @@ class MainActivity : AppCompatActivity() {
                 playButton.setOnClickListener {
                     val durationText = taskLayout.findViewById<TextView>(R.id.textViewDuration).text.toString()
                     val durationInMillis = convertDurationToMillis(durationText)
-                    startCountDownTimer(durationInMillis, taskLayout)
+                    startCountDownTimer(durationInMillis, taskLayout, taskName)
                 }
 
                 // Add a click listener to the task layout to allow for updating tasks
@@ -379,5 +430,9 @@ class MainActivity : AppCompatActivity() {
             }
 
         dialogBuilder.create().show()
+    }
+
+    companion object {
+        private const val PERMISSION_REQUEST_VIBRATE = 1
     }
 }
