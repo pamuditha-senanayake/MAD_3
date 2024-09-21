@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sharedPreferences: SharedPreferences
     private val timeList = mutableListOf<String>() // Time frames (hours)
     private var taskCounter = 0 // For unique task ID
-    private val taskList = mutableMapOf<String, MutableList<Pair<String, String>>>() // Tasks organized by time frame
+    private val taskList = mutableMapOf<String, MutableList<Triple<String, String, String>>>() // Tasks organized by time frame (name, duration, description)
     private var selectedTimeFrame: String? = null // Store the selected time frame
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -176,10 +176,11 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("Add Task") { dialog, _ ->
                 val taskName = popupView.findViewById<EditText>(R.id.editTextTaskName).text.toString()
                 val duration = popupView.findViewById<EditText>(R.id.editTextDuration).text.toString()
+                val description = popupView.findViewById<EditText>(R.id.editTextRoutine).text.toString()
 
                 if (taskName.isNotEmpty() && duration.isNotEmpty() && selectedTimeFrame != null) {
-                    addTaskToLayout(taskName, duration, selectedTimeFrame!!)
-                    saveTaskToSharedPreferences(taskName, duration, selectedTimeFrame!!)
+                    addTaskToLayout(taskName, duration, description, selectedTimeFrame!!)
+                    saveTaskToSharedPreferences(taskName, duration, description, selectedTimeFrame!!)
                 }
                 dialog.dismiss()
             }
@@ -195,7 +196,7 @@ class MainActivity : AppCompatActivity() {
         return containerLayout.findViewWithTag<TextView>(selectedTimeFrame)?.text?.toString()
     }
 
-    private fun addTaskToLayout(taskName: String, taskDuration: String, timeFrame: String) {
+    private fun addTaskToLayout(taskName: String, taskDuration: String, description: String, timeFrame: String) {
         // Check if the task already exists
         if (taskList[timeFrame]?.any { it.first == taskName } == true) {
             AlertDialog.Builder(this)
@@ -211,6 +212,7 @@ class MainActivity : AppCompatActivity() {
 
         taskLayout.findViewById<TextView>(R.id.textViewTask).text = taskName
         taskLayout.findViewById<TextView>(R.id.textViewDuration).text = taskDuration
+        taskLayout.findViewById<TextView>(R.id.textViewDescription).text = description
 
         // Add a delete button to the task layout
         val deleteButton = taskLayout.findViewById<Button>(R.id.button)
@@ -230,19 +232,36 @@ class MainActivity : AppCompatActivity() {
             startCountDownTimer(durationInMillis, taskLayout)
         }
 
+        // Add a click listener to the task layout to allow for updating tasks
+        taskLayout.setOnClickListener {
+            showUpdateTaskDialog(taskName, taskDuration, description, timeFrame)
+        }
+
         container.addView(taskLayout)
 
         // Add the task to the taskList map
         taskList.getOrPut(timeFrame) { mutableListOf() }
-            .add(Pair(taskName, taskDuration))
+            .add(Triple(taskName, taskDuration, description))
     }
 
+    // Update existing task
+    fun updateTask(taskName: String, taskDuration: String, taskDescription: String, timeFrame: String) {
+        // Update the task in the taskList
+        taskList[timeFrame]?.forEachIndexed { index, task ->
+            if (task.first == taskName) {
+                taskList[timeFrame]?.set(index, Triple(taskName, taskDuration, taskDescription))
+            }
+        }
+        saveTaskToSharedPreferences(taskName, taskDuration, taskDescription, timeFrame)
+        updateTaskListDisplay()
+    }
 
-    private fun saveTaskToSharedPreferences(taskName: String, duration: String, timeFrame: String) {
+    private fun saveTaskToSharedPreferences(taskName: String, duration: String, description: String, timeFrame: String) {
         with(sharedPreferences.edit()) {
             val existingTasks = taskList[timeFrame]?.map { it.first } ?: emptyList()
             existingTasks + taskName // Adding the new task to the existing tasks
             putStringSet("${timeFrame}_tasks", existingTasks.toSet())
+            putString("${timeFrame}_${taskName}_description", description) // Save description
             apply()
         }
     }
@@ -250,7 +269,15 @@ class MainActivity : AppCompatActivity() {
     private fun loadSavedTasks() {
         for (time in timeList) {
             val tasks = sharedPreferences.getStringSet("${time}_tasks", emptySet()) ?: emptySet()
-            taskList[time] = tasks.map { Pair(it, "Task Duration") }.toMutableList() // Load tasks with dummy duration
+
+            // Initialize taskList[time] if it doesn't exist
+            taskList.getOrPut(time) { mutableListOf() }
+
+            // Load tasks with description
+            tasks.forEach { taskName ->
+                val description = sharedPreferences.getString("${time}_${taskName}_description", "")
+                taskList[time]?.add(Triple(taskName, "Task Duration", description.orEmpty())) // Add task with dummy duration
+            }
         }
     }
 
@@ -259,6 +286,7 @@ class MainActivity : AppCompatActivity() {
         with(sharedPreferences.edit()) {
             val existingTasks = taskList[timeFrame]?.map { it.first } ?: emptyList()
             putStringSet("${timeFrame}_tasks", existingTasks.toSet())
+            remove("${timeFrame}_${taskName}_description") // Remove description
             apply()
         }
     }
@@ -292,12 +320,14 @@ class MainActivity : AppCompatActivity() {
 
         // Display tasks for the selected time frame
         selectedTimeFrame?.let { timeFrame ->
-            taskList[timeFrame]?.forEach { (taskName, duration) ->
+            taskList[timeFrame]?.forEach { (taskName, duration, description) ->
                 val container = findViewById<LinearLayout>(R.id.linearLayout4)
                 val taskLayout = LayoutInflater.from(this).inflate(R.layout.task_item, container, false) as ConstraintLayout
 
                 taskLayout.findViewById<TextView>(R.id.textViewTask).text = taskName
                 taskLayout.findViewById<TextView>(R.id.textViewDuration).text = duration
+                // Update description text view in your task_item.xml
+                taskLayout.findViewById<TextView>(R.id.textViewDescription).text = description
 
                 // Add a delete button to the task layout
                 val deleteButton = taskLayout.findViewById<Button>(R.id.button)
@@ -317,8 +347,37 @@ class MainActivity : AppCompatActivity() {
                     startCountDownTimer(durationInMillis, taskLayout)
                 }
 
+                // Add a click listener to the task layout to allow for updating tasks
+                taskLayout.setOnClickListener {
+                    showUpdateTaskDialog(taskName, duration, description, timeFrame)
+                }
+
                 container.addView(taskLayout)
             }
         }
+    }
+
+    private fun showUpdateTaskDialog(taskName: String, duration: String, description: String, timeFrame: String) {
+        val popupView = LayoutInflater.from(this).inflate(R.layout.dialog_task_input, null)
+        popupView.findViewById<EditText>(R.id.editTextTaskName).setText(taskName)
+        popupView.findViewById<EditText>(R.id.editTextDuration).setText(duration)
+        popupView.findViewById<EditText>(R.id.editTextRoutine).setText(description) // Set the description
+
+        val dialogBuilder = AlertDialog.Builder(this)
+            .setView(popupView)
+            .setTitle("Update Task")
+            .setPositiveButton("Update Task") { dialog, _ ->
+                val updatedTaskName = popupView.findViewById<EditText>(R.id.editTextTaskName).text.toString()
+                val updatedDuration = popupView.findViewById<EditText>(R.id.editTextDuration).text.toString()
+                val updatedDescription = popupView.findViewById<EditText>(R.id.editTextRoutine).text.toString()
+
+                updateTask(updatedTaskName, updatedDuration, updatedDescription, timeFrame)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+
+        dialogBuilder.create().show()
     }
 }
