@@ -7,10 +7,14 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.media.AudioAttributes
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
@@ -52,6 +56,13 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Request Notification Policy Permission (for Android 11 and above)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (checkSelfPermission(android.Manifest.permission.ACCESS_NOTIFICATION_POLICY) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(android.Manifest.permission.ACCESS_NOTIFICATION_POLICY), PERMISSION_REQUEST_NOTIFICATION_POLICY)
+            }
+        }
+
         // Create Notification Channel (for Android 8.0 and above)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -63,6 +74,14 @@ class MainActivity : AppCompatActivity() {
                 enableLights(true)
                 lightColor = Color.GREEN
                 enableVibration(true)
+                // Set the sound for the notification channel
+                setSound(
+                    Uri.parse("android.resource://com.example.task/" + R.raw.notification_sound),
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                        .build()
+                )
             }
             val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
@@ -338,6 +357,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun startCountDownTimer(durationInMillis: Long, taskLayout: ConstraintLayout, taskName: String) {
         val durationTextView = taskLayout.findViewById<TextView>(R.id.textViewDuration)
+        val notificationManager = NotificationManagerCompat.from(this) // Use MainActivity context
+
         object : CountDownTimer(durationInMillis, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished)
@@ -347,20 +368,48 @@ class MainActivity : AppCompatActivity() {
 
             override fun onFinish() {
                 durationTextView.text = "Finished!"
+
                 // Vibrate the device
                 if (vibrator.hasVibrator()) {
-                    vibrator.vibrate(500)
+                    vibrator.vibrate(VibrationEffect.createOneShot(5000, VibrationEffect.DEFAULT_AMPLITUDE))
+                    Log.d("VIBRATION", "Device vibrated for 500ms")
                 }
 
-                // Show a notification
-                val builder = NotificationCompat.Builder(this@MainActivity, CHANNEL_ID)
+                // Create the notification
+                val builder = NotificationCompat.Builder(this@MainActivity, CHANNEL_ID) // Use MainActivity context
                     .setSmallIcon(R.drawable.ic_launcher_background)
                     .setContentTitle("Task Finished!")
                     .setContentText("$taskName is finished")
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setAutoCancel(true)
+                    .setSound(
+                        Uri.parse("android.resource://com.example.task/" + R.raw.notification_sound) // Use correct URI
+                    )
+                    .setVibrate(longArrayOf(0, 500)) // Enable vibration
 
-                notificationManager.notify(1, builder.build())
+                // For Android 8.0 and above, create a notification channel
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val channel = NotificationChannel(
+                        CHANNEL_ID,
+                        "Task Notifications",
+                        NotificationManager.IMPORTANCE_HIGH
+                    ).apply {
+                        description = "Channel for task completion notifications"
+                        setSound(
+                            Uri.parse("android.resource://com.example.task/" + R.raw.notification_sound),
+                            AudioAttributes.Builder()
+                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                                .build()
+                        )
+                        enableVibration(true)
+                        vibrationPattern = longArrayOf(0, 500)
+                    }
+
+                    notificationManager.createNotificationChannel(channel)
+                }
+
+                notificationManager.notify(1, builder.build()) // Notify using the NotificationManagerCompat
             }
         }.start()
     }
@@ -434,5 +483,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val PERMISSION_REQUEST_VIBRATE = 1
+        private const val PERMISSION_REQUEST_NOTIFICATION_POLICY = 2
     }
 }
