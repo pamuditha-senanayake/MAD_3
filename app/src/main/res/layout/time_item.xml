@@ -5,25 +5,46 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="150dp"
     android:layout_height="50dp"
-    android:background="#F4F2F2"
-    android:padding="5dp">
+    android:background="#FFFFFF"
+    android:padding="5dp"
+    android:elevation="6dp"
+    android:layout_margin="8dp"
+    android:clipToPadding="false">
 
     <Button
         android:id="@+id/button"
         android:layout_width="27dp"
         android:layout_height="35dp"
-        android:textColorLink="#0E0101"
+        android:backgroundTint="#5B48EB"
+
+        android:elevation="4dp"
+        android:gravity="center"
+        android:padding="2dp"
+        android:shape="rectangle"
+        android:text="D"
+        android:textColor="#FFFFFF"
+        android:textSize="10sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
 
     <TextView
         android:id="@+id/textViewTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=""
+        android:textColor="#5B48EB"
+        android:textSize="16sp"
+        android:background="#F4F4F9"
+        android:padding="8dp"
+        android:elevation="4dp"
+        android:gravity="center"
+        android:layout_margin="4dp"
+
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

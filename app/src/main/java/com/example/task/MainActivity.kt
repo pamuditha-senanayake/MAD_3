@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -25,8 +26,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.concurrent.TimeUnit
+import androidx.activity.viewModels
+
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -34,7 +39,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var sharedPreferences: SharedPreferences
     private val timeList = mutableListOf<String>() // Time frames (hours)
     private var taskCounter = 0 // For unique task ID
-    private val taskList = mutableMapOf<String, MutableList<Triple<String, String, String>>>() // Tasks organized by time frame (name, duration, description)
+    private val taskList =
+        mutableMapOf<String, MutableList<Triple<String, String, String>>>() // Tasks organized by time frame (name, duration, description)
     private var selectedTimeFrame: String? = null // Store the selected time frame
     private lateinit var vibrator: Vibrator
     private lateinit var notificationManager: NotificationManagerCompat
@@ -44,6 +50,23 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
+
+        bottomNavigationView.setOnNavigationItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.home -> {
+                    // Already in ms1 (Home), so do nothing or reload this activity
+                    true
+                }
+                R.id.alarm -> {
+                    val intent = Intent(this, MainActivity2::class.java) // Navigate to ms2 (Notes)
+                    startActivity(intent)
+                    true
+                }
+                else -> false
+            }
+        }
+
         containerLayout = findViewById(R.id.linearLayout)
         sharedPreferences = getSharedPreferences("TimePrefs", Context.MODE_PRIVATE)
         vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -52,14 +75,20 @@ class MainActivity : AppCompatActivity() {
         // Request Vibration Permission (for Android 6.0 and above)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(android.Manifest.permission.VIBRATE) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(arrayOf(android.Manifest.permission.VIBRATE), PERMISSION_REQUEST_VIBRATE)
+                requestPermissions(
+                    arrayOf(android.Manifest.permission.VIBRATE),
+                    PERMISSION_REQUEST_VIBRATE
+                )
             }
         }
 
         // Request Notification Policy Permission (for Android 11 and above)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (checkSelfPermission(android.Manifest.permission.ACCESS_NOTIFICATION_POLICY) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(arrayOf(android.Manifest.permission.ACCESS_NOTIFICATION_POLICY), PERMISSION_REQUEST_NOTIFICATION_POLICY)
+                requestPermissions(
+                    arrayOf(android.Manifest.permission.ACCESS_NOTIFICATION_POLICY),
+                    PERMISSION_REQUEST_NOTIFICATION_POLICY
+                )
             }
         }
 
@@ -83,7 +112,8 @@ class MainActivity : AppCompatActivity() {
                         .build()
                 )
             }
-            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
 
@@ -134,7 +164,8 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        val newTimeView = LayoutInflater.from(this).inflate(R.layout.time_item, null) as ConstraintLayout
+        val newTimeView =
+            LayoutInflater.from(this).inflate(R.layout.time_item, null) as ConstraintLayout
         val timeTextView = newTimeView.findViewById<TextView>(R.id.textViewTime)
         timeTextView.text = time
 
@@ -229,13 +260,21 @@ class MainActivity : AppCompatActivity() {
             .setView(popupView)
             .setTitle("Add Task")
             .setPositiveButton("Add Task") { dialog, _ ->
-                val taskName = popupView.findViewById<EditText>(R.id.editTextTaskName).text.toString()
-                val duration = popupView.findViewById<EditText>(R.id.editTextDuration).text.toString()
-                val description = popupView.findViewById<EditText>(R.id.editTextRoutine).text.toString()
+                val taskName =
+                    popupView.findViewById<EditText>(R.id.editTextTaskName).text.toString()
+                val duration =
+                    popupView.findViewById<EditText>(R.id.editTextDuration).text.toString()
+                val description =
+                    popupView.findViewById<EditText>(R.id.editTextRoutine).text.toString()
 
                 if (taskName.isNotEmpty() && duration.isNotEmpty() && selectedTimeFrame != null) {
                     addTaskToLayout(taskName, duration, description, selectedTimeFrame!!)
-                    saveTaskToSharedPreferences(taskName, duration, description, selectedTimeFrame!!)
+                    saveTaskToSharedPreferences(
+                        taskName,
+                        duration,
+                        description,
+                        selectedTimeFrame!!
+                    )
                 }
                 dialog.dismiss()
             }
@@ -251,7 +290,12 @@ class MainActivity : AppCompatActivity() {
         return containerLayout.findViewWithTag<TextView>(selectedTimeFrame)?.text?.toString()
     }
 
-    private fun addTaskToLayout(taskName: String, taskDuration: String, description: String, timeFrame: String) {
+    private fun addTaskToLayout(
+        taskName: String,
+        taskDuration: String,
+        description: String,
+        timeFrame: String
+    ) {
         // Check if the task already exists
         if (taskList[timeFrame]?.any { it.first == taskName } == true) {
             AlertDialog.Builder(this)
@@ -263,7 +307,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         val container = findViewById<LinearLayout>(R.id.linearLayout4)
-        val taskLayout = LayoutInflater.from(this).inflate(R.layout.task_item, container, false) as ConstraintLayout
+        val taskLayout = LayoutInflater.from(this)
+            .inflate(R.layout.task_item, container, false) as ConstraintLayout
 
         taskLayout.findViewById<TextView>(R.id.textViewTask).text = taskName
         taskLayout.findViewById<TextView>(R.id.textViewDuration).text = taskDuration
@@ -282,7 +327,8 @@ class MainActivity : AppCompatActivity() {
         // Add a play button (for timer)
         val playButton = taskLayout.findViewById<Button>(R.id.buttonPlay)
         playButton.setOnClickListener {
-            val durationText = taskLayout.findViewById<TextView>(R.id.textViewDuration).text.toString()
+            val durationText =
+                taskLayout.findViewById<TextView>(R.id.textViewDuration).text.toString()
             val durationInMillis = convertDurationToMillis(durationText)
             startCountDownTimer(durationInMillis, taskLayout, taskName)
         }
@@ -300,7 +346,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Update existing task
-    fun updateTask(taskName: String, taskDuration: String, taskDescription: String, timeFrame: String) {
+    fun updateTask(
+        taskName: String,
+        taskDuration: String,
+        taskDescription: String,
+        timeFrame: String
+    ) {
         // Update the task in the taskList
         taskList[timeFrame]?.forEachIndexed { index, task ->
             if (task.first == taskName) {
@@ -311,13 +362,51 @@ class MainActivity : AppCompatActivity() {
         updateTaskListDisplay()
     }
 
-    private fun saveTaskToSharedPreferences(taskName: String, duration: String, description: String, timeFrame: String) {
+    private fun saveTaskToSharedPreferences(
+        taskName: String,
+        duration: String,
+        description: String,
+        timeFrame: String
+    ) {
         with(sharedPreferences.edit()) {
             val existingTasks = taskList[timeFrame]?.map { it.first } ?: emptyList()
             existingTasks + taskName // Adding the new task to the existing tasks
             putStringSet("${timeFrame}_tasks", existingTasks.toSet())
             putString("${timeFrame}_${taskName}_description", description) // Save description
             apply()
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            PERMISSION_REQUEST_VIBRATE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d("Permissions", "Vibrate permission granted")
+                    // Proceed with vibration functionality
+                } else {
+                    Log.d("Permissions", "Vibrate permission denied")
+                    // Disable vibration features or display a message
+                }
+            }
+
+            PERMISSION_REQUEST_NOTIFICATION_POLICY -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d("Permissions", "Notification policy permission granted")
+                    // Proceed with controlling notification settings
+                } else {
+                    Log.d("Permissions", "Notification policy permission denied")
+                    // Inform the user to grant the permission in system settings
+                }
+            }
+
+            else -> {
+                // Handle other permission requests
+            }
         }
     }
 
@@ -331,7 +420,13 @@ class MainActivity : AppCompatActivity() {
             // Load tasks with description
             tasks.forEach { taskName ->
                 val description = sharedPreferences.getString("${time}_${taskName}_description", "")
-                taskList[time]?.add(Triple(taskName, "Task Duration", description.orEmpty())) // Add task with dummy duration
+                taskList[time]?.add(
+                    Triple(
+                        taskName,
+                        "Task Duration",
+                        description.orEmpty()
+                    )
+                ) // Add task with dummy duration
             }
         }
     }
@@ -345,6 +440,57 @@ class MainActivity : AppCompatActivity() {
             apply()
         }
     }
+// Save tasks to SharedPreferences by appending new ones to the existing ones
+//private fun saveTaskToSharedPreferences(taskName: String, taskDuration: String, description: String, timeFrame: String) {
+//    val savedTasksJson = sharedPreferences.getString(timeFrame, null)
+//    val savedTasks: MutableList<Triple<String, String, String>> = if (savedTasksJson != null) {
+//        Gson().fromJson(savedTasksJson, object : TypeToken<MutableList<Triple<String, String, String>>>() {}.type)
+//    } else {
+//        mutableListOf()
+//    }
+//
+//    savedTasks.add(Triple(taskName, taskDuration, description))
+//
+//    with(sharedPreferences.edit()) {
+//        putString(timeFrame, Gson().toJson(savedTasks))
+//        apply()
+//    }
+//}
+//
+//    private fun loadSavedTasks() {
+//        val allEntries = sharedPreferences.all
+//        for ((timeFrame, taskJson) in allEntries) {
+//            if (taskJson is String) {
+//                val savedTasks = Gson().fromJson(taskJson, object : TypeToken<MutableList<Triple<String, String, String>>>() {}.type)
+//                taskList[timeFrame] = savedTasks
+//                savedTasks.forEach { (taskName, duration, description) ->
+//                    addTaskToLayout(taskName, duration, description, timeFrame)
+//                }
+//            }
+//        }
+//    }
+//
+//    private fun removeTaskFromSharedPreferences(taskName: String, timeFrame: String) {
+//        val savedTasksJson = sharedPreferences.getString(timeFrame, null)
+//        val savedTasks: MutableList<Triple<String, String, String>> = if (savedTasksJson != null) {
+//            Gson().fromJson(savedTasksJson, object : TypeToken<MutableList<Triple<String, String, String>>>() {}.type)
+//        } else {
+//            mutableListOf()
+//        }
+//
+//        savedTasks.removeIf { it.first == taskName }
+//
+//        with(sharedPreferences.edit()) {
+//            if (savedTasks.isEmpty()) {
+//                remove(timeFrame)
+//            } else {
+//                putString(timeFrame, Gson().toJson(savedTasks))
+//            }
+//            apply()
+//        }
+//    }
+//
+
 
     private fun convertDurationToMillis(duration: String): Long {
         val parts = duration.split(":").map { it.toIntOrNull() ?: 0 }
@@ -355,7 +501,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startCountDownTimer(durationInMillis: Long, taskLayout: ConstraintLayout, taskName: String) {
+    private fun startCountDownTimer(
+        durationInMillis: Long,
+        taskLayout: ConstraintLayout,
+        taskName: String
+    ) {
         val durationTextView = taskLayout.findViewById<TextView>(R.id.textViewDuration)
         val notificationManager = NotificationManagerCompat.from(this) // Use MainActivity context
 
@@ -371,12 +521,20 @@ class MainActivity : AppCompatActivity() {
 
                 // Vibrate the device
                 if (vibrator.hasVibrator()) {
-                    vibrator.vibrate(VibrationEffect.createOneShot(5000, VibrationEffect.DEFAULT_AMPLITUDE))
+                    vibrator.vibrate(
+                        VibrationEffect.createOneShot(
+                            5000,
+                            VibrationEffect.DEFAULT_AMPLITUDE
+                        )
+                    )
                     Log.d("VIBRATION", "Device vibrated for 500ms")
                 }
 
                 // Create the notification
-                val builder = NotificationCompat.Builder(this@MainActivity, CHANNEL_ID) // Use MainActivity context
+                val builder = NotificationCompat.Builder(
+                    this@MainActivity,
+                    CHANNEL_ID
+                ) // Use MainActivity context
                     .setSmallIcon(R.drawable.ic_launcher_background)
                     .setContentTitle("Task Finished!")
                     .setContentText("$taskName is finished")
@@ -409,7 +567,10 @@ class MainActivity : AppCompatActivity() {
                     notificationManager.createNotificationChannel(channel)
                 }
 
-                notificationManager.notify(1, builder.build()) // Notify using the NotificationManagerCompat
+                notificationManager.notify(
+                    1,
+                    builder.build()
+                ) // Notify using the NotificationManagerCompat
             }
         }.start()
     }
@@ -422,7 +583,8 @@ class MainActivity : AppCompatActivity() {
         selectedTimeFrame?.let { timeFrame ->
             taskList[timeFrame]?.forEach { (taskName, duration, description) ->
                 val container = findViewById<LinearLayout>(R.id.linearLayout4)
-                val taskLayout = LayoutInflater.from(this).inflate(R.layout.task_item, container, false) as ConstraintLayout
+                val taskLayout = LayoutInflater.from(this)
+                    .inflate(R.layout.task_item, container, false) as ConstraintLayout
 
                 taskLayout.findViewById<TextView>(R.id.textViewTask).text = taskName
                 taskLayout.findViewById<TextView>(R.id.textViewDuration).text = duration
@@ -442,7 +604,8 @@ class MainActivity : AppCompatActivity() {
                 // Add a play button (for timer)
                 val playButton = taskLayout.findViewById<Button>(R.id.buttonPlay)
                 playButton.setOnClickListener {
-                    val durationText = taskLayout.findViewById<TextView>(R.id.textViewDuration).text.toString()
+                    val durationText =
+                        taskLayout.findViewById<TextView>(R.id.textViewDuration).text.toString()
                     val durationInMillis = convertDurationToMillis(durationText)
                     startCountDownTimer(durationInMillis, taskLayout, taskName)
                 }
@@ -457,19 +620,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showUpdateTaskDialog(taskName: String, duration: String, description: String, timeFrame: String) {
+    private fun showUpdateTaskDialog(
+        taskName: String,
+        duration: String,
+        description: String,
+        timeFrame: String
+    ) {
         val popupView = LayoutInflater.from(this).inflate(R.layout.dialog_task_input, null)
         popupView.findViewById<EditText>(R.id.editTextTaskName).setText(taskName)
         popupView.findViewById<EditText>(R.id.editTextDuration).setText(duration)
-        popupView.findViewById<EditText>(R.id.editTextRoutine).setText(description) // Set the description
+        popupView.findViewById<EditText>(R.id.editTextRoutine)
+            .setText(description) // Set the description
 
         val dialogBuilder = AlertDialog.Builder(this)
             .setView(popupView)
             .setTitle("Update Task")
             .setPositiveButton("Update Task") { dialog, _ ->
-                val updatedTaskName = popupView.findViewById<EditText>(R.id.editTextTaskName).text.toString()
-                val updatedDuration = popupView.findViewById<EditText>(R.id.editTextDuration).text.toString()
-                val updatedDescription = popupView.findViewById<EditText>(R.id.editTextRoutine).text.toString()
+                val updatedTaskName =
+                    popupView.findViewById<EditText>(R.id.editTextTaskName).text.toString()
+                val updatedDuration =
+                    popupView.findViewById<EditText>(R.id.editTextDuration).text.toString()
+                val updatedDescription =
+                    popupView.findViewById<EditText>(R.id.editTextRoutine).text.toString()
 
                 updateTask(updatedTaskName, updatedDuration, updatedDescription, timeFrame)
                 dialog.dismiss()
@@ -485,4 +657,8 @@ class MainActivity : AppCompatActivity() {
         private const val PERMISSION_REQUEST_VIBRATE = 1
         private const val PERMISSION_REQUEST_NOTIFICATION_POLICY = 2
     }
+
+
+
+
 }

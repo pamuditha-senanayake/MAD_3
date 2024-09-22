@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="Home"
+        android:id="@+id/home"
+        android:icon="@drawable/baseline_airplay_24"/>
+    <item android:title="Alarm"
+        android:id="@+id/alarm"
+        android:icon="@drawable/baseline_alarm_24"/>
+<!--    <item android:title="Settings"-->
+<!--        android:id="@+id/settings"-->
+<!--        android:icon="@drawable/baseline_app_settings_alt_24"/>-->
+</menu>

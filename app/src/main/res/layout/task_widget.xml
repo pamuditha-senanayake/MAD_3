@@ -3,18 +3,23 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#2196F3"
+
     android:gravity="center"
     android:orientation="vertical"
     tools:context=".TaskWidgetProvider"
-    tools:targetApi="21">
+    tools:targetApi="21"
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/appwidget_text"
+        android:fontFamily="@font/lk"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:contentDescription="@string/appwidget_text"
         android:text="@string/appwidget_text"
-        android:textSize="14sp" />
-
+        android:textSize="18sp"
+        android:textColor="#FFEB3B"
+        android:background="#673AB7"
+        android:padding="12dp"
+        android:gravity="center"
+        android:elevation="4dp" />
 </LinearLayout>

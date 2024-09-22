@@ -1,7 +1,19 @@
 <resources>
-    <string name="app_name">Task</string>
-    <string name="hint1">Enter time (e.g., 10:00 AM)</string>
-    <string name="appwidget_text">Tap to open app</string> <string name="add_widget">Add widget</string>
+        <string name="app_name">Task</string>
+        <string name="hint1">Enter time (e.g., 10:00 AM)</string>
+        <string name="appwidget_text">STEPWISE!!</string>
+        <string name="add_widget">Add widget</string>
+        <string name="set_alarm">Set Alarm</string>
+        <string name="next">NEXT</string>
+        <string name="task_name">Task Name</string>
+        <string name="task_duration">00:00</string>
+        <string name="play_timer">Play Timer</string>
+        <string name="delete">Delete</string>
+        <string name="task_description">Task Description</string>
+        <string name="appwidget_text">Your widget text here</string>
+        <string name="sections">SECTIONS</string>
+        <string name="add_time_frames">Add time frames you'd like to include</string>
+        <string name="incremental_changes">Mention small tasks that lead to your big goal (Incremental Changes)</string>
 
 
 

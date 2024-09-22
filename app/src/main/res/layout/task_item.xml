@@ -3,8 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp"
-    android:background="#F8F8F8">
+    android:layout_marginBottom="5dp"
+    android:background="#FFFFFF"
+    android:clipToPadding="false"
+    android:elevation="4dp"
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/textViewTask"
@@ -13,12 +16,12 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:text="Task Name"
+        android:textColor="#333333"
         android:textSize="18sp"
-        android:textColor="#000"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/textViewDuration"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textViewDuration"
@@ -26,41 +29,55 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:text="00:00"
+        android:textColor="#333333"
         android:textSize="18sp"
-        android:textColor="#000"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/buttonPlay"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/buttonPlay"
         android:layout_width="48dp"
         android:layout_height="48dp"
+        android:layout_marginEnd="8dp"
+        android:backgroundTint="#5B48EB"
         android:contentDescription="Play Timer"
-        app:layout_constraintEnd_toStartOf="@+id/button"
-        app:layout_constraintTop_toTopOf="parent"
+        android:elevation="4dp"
+        android:gravity="center"
+        android:padding="8dp"
+        android:shape="oval"
+        android:text="▶"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginEnd="8dp"/>
+        app:layout_constraintEnd_toStartOf="@+id/button"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:backgroundTint="#5B48EB"
+        android:elevation="4dp"
+        android:padding="8dp"
         android:text="Delete"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginEnd="8dp"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textViewDescription"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
         android:text="Task Description"
+        android:textColor="#666666"
         android:textSize="14sp"
-        app:layout_constraintTop_toBottomOf="@+id/textViewDuration"
-        app:layout_constraintStart_toStartOf="@+id/textViewTask"
-        app:layout_constraintEnd_toEndOf="@+id/textViewTask"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginTop="4dp"/>
+        app:layout_constraintEnd_toEndOf="@+id/textViewTask"
+        app:layout_constraintStart_toStartOf="@+id/textViewTask"
+        app:layout_constraintTop_toBottomOf="@+id/textViewDuration" />
 </androidx.constraintlayout.widget.ConstraintLayout>
